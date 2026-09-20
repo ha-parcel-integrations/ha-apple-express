@@ -52,6 +52,8 @@ _STATUS_MAP: dict[str, ParcelStatus] = {
     "Out for Delivery": ParcelStatus.OUT_FOR_DELIVERY,
     "Exception - No Answer": ParcelStatus.PROBLEM,
     "Exception - No Suite or Unit Number": ParcelStatus.PROBLEM,
+    "Returned for Next Attempt": ParcelStatus.PROBLEM,
+    "Second Attempt Planned": ParcelStatus.PROBLEM,
 }
 
 # Each distinct carrier status is logged once per Home Assistant session. Status
