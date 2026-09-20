@@ -52,6 +52,7 @@ _STATUS_MAP: dict[str, ParcelStatus] = {
     "Out for Delivery": ParcelStatus.OUT_FOR_DELIVERY,
     "Exception - No Answer": ParcelStatus.PROBLEM,
     "Exception - No Suite or Unit Number": ParcelStatus.PROBLEM,
+    "FSA Not Serviced": ParcelStatus.PROBLEM,
     "Returned for Next Attempt": ParcelStatus.IN_TRANSIT,
     "Second Attempt Planned": ParcelStatus.IN_TRANSIT,
 }

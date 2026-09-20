@@ -37,6 +37,7 @@ def test_confirmed_statuses_are_mapped():
     assert map_parcel_status("Received at Local Sort Facility") is ParcelStatus.IN_TRANSIT
     assert map_parcel_status("Out for Delivery") is ParcelStatus.OUT_FOR_DELIVERY
     assert map_parcel_status("Exception - No Answer") is ParcelStatus.PROBLEM
+    assert map_event_status("FSA Not Serviced") is ParcelStatus.PROBLEM
     assert map_parcel_status("Returned for Next Attempt") is ParcelStatus.IN_TRANSIT
     assert map_event_status("Second Attempt Planned") is ParcelStatus.IN_TRANSIT
     assert map_event_status("Package Picked Up") is ParcelStatus.IN_TRANSIT
