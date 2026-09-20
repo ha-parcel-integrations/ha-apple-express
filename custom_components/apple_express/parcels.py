@@ -43,6 +43,8 @@ NEW_ISSUE_URL = (
 
 _STATUS_MAP: dict[str, ParcelStatus] = {
     "Delivered": ParcelStatus.DELIVERED,
+    "Order Created": ParcelStatus.REGISTERED,
+    "Order Request Received": ParcelStatus.REGISTERED,
     "Waiting for Parcel": ParcelStatus.REGISTERED,
     "Pending Delivery Notification Sent": ParcelStatus.REGISTERED,
     "Delivery Notification Sent": ParcelStatus.REGISTERED,

@@ -33,6 +33,8 @@ from .payloads import (
 
 def test_confirmed_statuses_are_mapped():
     assert map_parcel_status("Delivered") is ParcelStatus.DELIVERED
+    assert map_parcel_status("Order Created") is ParcelStatus.REGISTERED
+    assert map_event_status("Order Request Received") is ParcelStatus.REGISTERED
     assert map_parcel_status("Waiting for Parcel") is ParcelStatus.REGISTERED
     assert map_parcel_status("Received at Local Sort Facility") is ParcelStatus.IN_TRANSIT
     assert map_parcel_status("Out for Delivery") is ParcelStatus.OUT_FOR_DELIVERY
