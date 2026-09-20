@@ -73,10 +73,13 @@ a per-code budget the poller cannot realistically exhaust would only add state
 to no effect, and they are absent from the 429 itself.
 
 The timestamps carry no consistent offset (`generatedAtTimeZone` is usually
-empty), and the API exposes no structured ETA field, so canonical timestamps and
-delivery windows remain `None`; the optional timeline retains the carrier's own
-`generatedAt` values and raw event names. Diagnostics redact the code,
-reference, location and delivery fields.
+empty), and the API exposes no structured ETA field. When `statusChangeText`
+matches `Estimated Delivery: <English date and time>`, the integration extracts
+that value as the end of a six-hour window and uses naive local ISO timestamps;
+values such as `To Be Determined` remain empty. `Delivered <English date and
+time>` similarly fills `delivered_at`. The optional timeline retains the
+carrier's own `generatedAt` values and raw event names. Diagnostics redact the
+code, reference, location and delivery fields.
 
 ## Options and reloads
 

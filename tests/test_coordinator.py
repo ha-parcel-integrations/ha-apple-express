@@ -413,7 +413,7 @@ async def test_fires_registered_event_for_new_parcel(hass):
     assert events[0].data["barcode"] == OTHER_CODE
 
 
-async def test_unstructured_eta_text_does_not_fire_delivery_time_event(hass):
+async def test_changed_parseable_eta_text_fires_delivery_time_event(hass):
     entry = _entry_with([{CONF_TRACKING_CODE: ACTIVE_CODE}])
     entry.add_to_hass(hass)
     client = AsyncMock()
@@ -428,8 +428,37 @@ async def test_unstructured_eta_text_does_not_fire_delivery_time_event(hass):
     await coordinator._async_update_data()  # first refresh: suppressed
 
     moved = active_sample()
-    moved["orderDetails"]["statusChangeText"] = "Estimated Delivery: later"
+    moved["orderDetails"]["statusChangeText"] = (
+        "Estimated Delivery: September 21, 2026 9:00 PM"
+    )
     client.async_get_parcel.return_value = moved
+    await coordinator._async_update_data()
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data["old_planned_from"] == "2026-09-20T15:00:00"
+    assert events[0].data["new_planned_from"] == "2026-09-21T15:00:00"
+    assert events[0].data["old_planned_to"] == "2026-09-20T21:00:00"
+    assert events[0].data["new_planned_to"] == "2026-09-21T21:00:00"
+
+
+async def test_unparseable_eta_text_does_not_fire_delivery_time_event(hass):
+    entry = _entry_with([{CONF_TRACKING_CODE: ACTIVE_CODE}])
+    entry.add_to_hass(hass)
+    client = AsyncMock()
+    coordinator = AppleExpressCoordinator(hass, client, entry)
+
+    events = []
+    hass.bus.async_listen(
+        f"{DOMAIN}_parcel_delivery_time_changed", lambda e: events.append(e)
+    )
+
+    client.async_get_parcel.return_value = active_sample()
+    await coordinator._async_update_data()
+
+    unresolved = active_sample()
+    unresolved["orderDetails"]["statusChangeText"] = "Estimated Delivery: To Be Determined"
+    client.async_get_parcel.return_value = unresolved
     await coordinator._async_update_data()
     await hass.async_block_till_done()
 

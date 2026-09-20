@@ -35,7 +35,7 @@ KNOWN_CAPABILITIES = frozenset(
     {"weight", "dimensions", "delivery_window", "pickup_point", "url", "history"}
 )
 
-CAPABILITIES = frozenset({"url", "history"})
+CAPABILITIES = frozenset({"delivery_window", "url", "history"})
 
 # If this carrier ever grows a second backend with a genuinely different
 # payload shape (a country-specific API, not just a config option), replace

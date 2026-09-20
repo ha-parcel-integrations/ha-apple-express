@@ -10,6 +10,8 @@ from custom_components.apple_express.const import (
 from custom_components.apple_express.parcels import (
     apply_delivered_filter,
     build_history,
+    delivered_timestamp,
+    estimated_delivery_timestamp,
     format_dimensions,
     map_event_status,
     map_parcel_status,
@@ -53,6 +55,21 @@ def test_helpers_handle_timestamp_and_dimensions_edges():
     assert to_iso_timestamp(10**20) is None
     assert format_dimensions(1, 2, 3)["text"] == "1 x 2 x 3 cm"
     assert format_dimensions(1, None, 3) is None
+
+
+def test_estimated_delivery_text_parses_only_recognised_timestamps():
+    assert estimated_delivery_timestamp(
+        "Estimated Delivery: September 20, 2026 9:00 PM"
+    ) == "2026-09-20T21:00:00"
+    assert estimated_delivery_timestamp("Estimated Delivery: To Be Determined") is None
+    assert estimated_delivery_timestamp("Delivery: September 20, 2026 9:00 PM") is None
+
+
+def test_delivered_text_parses_only_recognised_timestamps():
+    assert delivered_timestamp("Delivered September 19, 2026 11:58 AM") == (
+        "2026-09-19T11:58:00"
+    )
+    assert delivered_timestamp("Delivered To Be Determined") is None
 
 
 def test_history_keeps_all_events_oldest_first_with_carrier_timestamps():
@@ -142,8 +159,9 @@ def test_normalize_delivered_response_has_canonical_shape():
     assert parcel["delivered"] is True
     assert parcel["url"].endswith(DELIVERED_CODE)
     assert parcel["history"] is not None
-    for key in ("sender", "receiver", "delivered_at", "planned_from", "planned_to", "weight", "dimensions"):
+    for key in ("sender", "receiver", "planned_from", "planned_to", "weight", "dimensions"):
         assert parcel[key] is None
+    assert parcel["delivered_at"] == "2026-01-03T15:04:00"
     assert parcel["pickup"] is False
     assert parcel["pickup_point"] is None
 
@@ -154,7 +172,9 @@ def test_normalize_active_response_maps_its_status_and_history_is_opt_in():
     assert parcel["status"] is ParcelStatus.IN_TRANSIT
     assert parcel["delivered"] is False
     assert parcel["history"] is None
-    assert CAPABILITIES == frozenset({"url", "history"})
+    assert parcel["planned_from"] == "2026-09-20T15:00:00"
+    assert parcel["planned_to"] == "2026-09-20T21:00:00"
+    assert CAPABILITIES == frozenset({"delivery_window", "url", "history"})
 
 
 def test_sort_and_delivered_filter_keep_missing_values_last():

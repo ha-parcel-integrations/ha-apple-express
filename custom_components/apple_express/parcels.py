@@ -140,6 +140,34 @@ def to_iso_timestamp(value: Any) -> str | None:
     return str(value)
 
 
+def _status_change_timestamp(status_change_text: Any, prefix: str) -> str | None:
+    """Extract a local timestamp following an exact Apple Express text prefix."""
+    if not isinstance(status_change_text, str) or not status_change_text.startswith(prefix):
+        return None
+    try:
+        return datetime.strptime(
+            status_change_text.removeprefix(prefix).strip(), "%B %d, %Y %I:%M %p"
+        ).isoformat()
+    except ValueError:
+        return None
+
+
+def estimated_delivery_timestamp(status_change_text: Any) -> str | None:
+    """Extract Apple Express's point ETA from its display-only status text.
+
+    The API has no structured ETA and does not attach a timezone to this
+    sentence.  Keep a successfully parsed value as a naive ISO timestamp,
+    matching the carrier's other local timestamps.  Text such as ``To Be
+    Determined`` deliberately remains ``None``.
+    """
+    return _status_change_timestamp(status_change_text, "Estimated Delivery:")
+
+
+def delivered_timestamp(status_change_text: Any) -> str | None:
+    """Extract the delivered-at time from Apple Express's display status."""
+    return _status_change_timestamp(status_change_text, "Delivered ")
+
+
 def format_dimensions(
     length: float | None, width: float | None, height: float | None
 ) -> dict[str, Any] | None:
@@ -202,14 +230,29 @@ def tracking_url(tracking_code: str | None) -> str | None:
 def normalize_parcel(raw: dict, *, include_history: bool = False) -> dict:
     """Return a carrier-agnostic parcel dict with the payload under ``raw``.
 
-    Timestamp timezone semantics and structured delivery estimates are not
-    confirmed, so their canonical fields intentionally remain ``None``.
+    Apple Express supplies its ETA as display text without a timezone. A
+    recognised value is the end of its six-hour delivery window; other
+    timestamp semantics remain unconfirmed.
     """
     order = raw.get("orderDetails") if isinstance(raw.get("orderDetails"), dict) else {}
     tracking_code = order.get("appleTrackingNumber")
     raw_status = order.get("currentStatus")
     status = map_parcel_status(raw_status)
     delivered = status is ParcelStatus.DELIVERED
+    delivered_at = (
+        delivered_timestamp(order.get("statusChangeText")) if delivered else None
+    )
+    planned_from = (
+        None
+        if delivered
+        else estimated_delivery_timestamp(order.get("statusChangeText"))
+    )
+    planned_to = planned_from
+    planned_from = (
+        (datetime.fromisoformat(planned_to) - timedelta(hours=6)).isoformat()
+        if planned_to
+        else None
+    )
 
     return {
         "carrier": "Apple Express",
@@ -219,9 +262,9 @@ def normalize_parcel(raw: dict, *, include_history: bool = False) -> dict:
         "status": status,
         "raw_status": raw_status,
         "delivered": delivered,
-        "delivered_at": None,
-        "planned_from": None,
-        "planned_to": None,
+        "delivered_at": delivered_at,
+        "planned_from": planned_from,
+        "planned_to": planned_to,
         "pickup": False,
         "pickup_point": None,
         "url": tracking_url(tracking_code),

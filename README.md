@@ -36,7 +36,7 @@ Part of the [ha-parcel-integrations](https://ha-parcel-integrations.github.io/) 
 - Track any number of Apple Express parcels by tracking code — no account needed
 - Per-parcel sensor with the canonical status, the carrier's own status text and a tracking deep-link
 - Summary sensors: incoming parcels, next delivery, recently delivered parcels
-- Read-only **Deliveries** calendar, ready for future structured delivery estimates
+- Read-only **Deliveries** calendar with Apple Express's estimated six-hour delivery window
 - `apple_express.track_parcel` / `apple_express.untrack_parcel` services, so a dashboard button can add a parcel
 - Events + device triggers for no-code automations (parcel registered, status changed, delivered, delivery time changed)
 - Opt-in per-parcel status history
