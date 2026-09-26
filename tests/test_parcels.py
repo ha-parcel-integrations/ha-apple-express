@@ -43,6 +43,7 @@ def test_confirmed_statuses_are_mapped():
     assert map_parcel_status("Returned for Next Attempt") is ParcelStatus.IN_TRANSIT
     assert map_event_status("Second Attempt Planned") is ParcelStatus.IN_TRANSIT
     assert map_event_status("Package Picked Up") is ParcelStatus.IN_TRANSIT
+    assert map_event_status("Picked Up") is ParcelStatus.IN_TRANSIT
 
 
 def test_unknown_warning_is_value_free_and_one_shot(caplog):
