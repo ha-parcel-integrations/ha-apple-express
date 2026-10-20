@@ -243,7 +243,9 @@ def normalize_parcel(raw: dict, *, include_history: bool = False) -> dict:
     recognised value is the end of its six-hour delivery window; other
     timestamp semantics remain unconfirmed.
     """
-    order = raw.get("orderDetails") if isinstance(raw.get("orderDetails"), dict) else {}
+    order = raw.get("orderDetails")
+    if not isinstance(order, dict):
+        order = {}
     tracking_code = order.get("appleTrackingNumber")
     raw_status = order.get("currentStatus")
     status = map_parcel_status(raw_status)

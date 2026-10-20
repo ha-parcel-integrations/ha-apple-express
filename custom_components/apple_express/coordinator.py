@@ -10,6 +10,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 import hashlib
 import logging
+from typing import Any
 
 import aiohttp
 from homeassistant.config_entries import ConfigEntry
@@ -127,6 +128,8 @@ class AppleExpressCoordinator(DataUpdateCoordinator[list[dict]]):
     active (not-yet-delivered) parcels, ``self.delivered`` the rest.
     """
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -242,6 +245,7 @@ class AppleExpressCoordinator(DataUpdateCoordinator[list[dict]]):
         retry_afters: list[float] = []
         saw_429 = False
         for code in codes_to_fetch:
+            result: dict[str, Any] | BaseException | None
             try:
                 result = await self._client.async_get_parcel(code)
             except (AppleExpressApiError, aiohttp.ClientError) as err:
