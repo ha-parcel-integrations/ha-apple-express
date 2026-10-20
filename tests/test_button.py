@@ -1,4 +1,5 @@
 """Tests for the Apple Express refresh button."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 from custom_components.apple_express.button import AppleExpressRefreshButton

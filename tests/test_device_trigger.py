@@ -1,4 +1,5 @@
 """Tests for Apple Express device triggers."""
+
 from custom_components.apple_express.const import DOMAIN
 from custom_components.apple_express.device_trigger import (
     TRIGGER_EVENTS,

@@ -1,4 +1,5 @@
 """Tests for the Apple Express API client."""
+
 import json
 from unittest.mock import AsyncMock, MagicMock
 
@@ -13,12 +14,16 @@ from custom_components.apple_express.api import (
 from .payloads import delivered_sample, not_found_sample
 
 
-def _session_returning(status: int, body: object, headers: dict | None = None) -> MagicMock:
+def _session_returning(
+    status: int, body: object, headers: dict | None = None
+) -> MagicMock:
     response = AsyncMock()
     response.status = status
     response.headers = headers or {}
     response.json = AsyncMock(
-        side_effect=json.JSONDecodeError("x", body, 0) if isinstance(body, str) else None,
+        side_effect=json.JSONDecodeError("x", body, 0)
+        if isinstance(body, str)
+        else None,
         return_value=None if isinstance(body, str) else body,
     )
     context = MagicMock()
@@ -45,21 +50,29 @@ async def test_get_parcel_returns_none_for_an_unknown_code():
 @pytest.mark.parametrize("body", [{}, {"orderDetails": {}}, {"statusDetails": []}, []])
 async def test_get_parcel_rejects_incomplete_success_body(body):
     with pytest.raises(AppleExpressApiError):
-        await AppleExpressApiClient(_session_returning(200, body)).async_get_parcel("90000001")
+        await AppleExpressApiClient(_session_returning(200, body)).async_get_parcel(
+            "90000001"
+        )
 
 
 async def test_get_parcel_handles_transport_and_body_errors():
     for status in (400, 404, 500):
         with pytest.raises(AppleExpressApiError) as error:
-            await AppleExpressApiClient(_session_returning(status, {})).async_get_parcel("90000001")
+            await AppleExpressApiClient(
+                _session_returning(status, {})
+            ).async_get_parcel("90000001")
         assert error.value.status_code == status
     with pytest.raises(AppleExpressApiError):
-        await AppleExpressApiClient(_session_returning(200, "not json")).async_get_parcel("90000001")
+        await AppleExpressApiClient(
+            _session_returning(200, "not json")
+        ).async_get_parcel("90000001")
 
 
 async def test_get_parcel_exposes_retry_after_and_propagates_network_error():
     with pytest.raises(AppleExpressApiError) as error:
-        await AppleExpressApiClient(_session_returning(429, {}, {"Retry-After": "12"})).async_get_parcel("90000001")
+        await AppleExpressApiClient(
+            _session_returning(429, {}, {"Retry-After": "12"})
+        ).async_get_parcel("90000001")
     assert error.value.retry_after == 12
     session = MagicMock()
     session.get.side_effect = aiohttp.ClientError("offline")

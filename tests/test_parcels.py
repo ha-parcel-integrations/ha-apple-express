@@ -1,4 +1,5 @@
 """Tests for the Apple Express response mapping."""
+
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.apple_express.const import (
@@ -36,7 +37,9 @@ def test_confirmed_statuses_are_mapped():
     assert map_parcel_status("Order Created") is ParcelStatus.REGISTERED
     assert map_event_status("Order Request Received") is ParcelStatus.REGISTERED
     assert map_parcel_status("Waiting for Parcel") is ParcelStatus.REGISTERED
-    assert map_parcel_status("Received at Local Sort Facility") is ParcelStatus.IN_TRANSIT
+    assert (
+        map_parcel_status("Received at Local Sort Facility") is ParcelStatus.IN_TRANSIT
+    )
     assert map_parcel_status("Out for Delivery") is ParcelStatus.OUT_FOR_DELIVERY
     assert map_parcel_status("Exception - No Answer") is ParcelStatus.PROBLEM
     assert map_event_status("FSA Not Serviced") is ParcelStatus.PROBLEM
@@ -64,9 +67,10 @@ def test_helpers_handle_timestamp_and_dimensions_edges():
 
 
 def test_estimated_delivery_text_parses_only_recognised_timestamps():
-    assert estimated_delivery_timestamp(
-        "Estimated Delivery: September 20, 2026 9:00 PM"
-    ) == "2026-09-20T21:00:00"
+    assert (
+        estimated_delivery_timestamp("Estimated Delivery: September 20, 2026 9:00 PM")
+        == "2026-09-20T21:00:00"
+    )
     assert estimated_delivery_timestamp("Estimated Delivery: To Be Determined") is None
     assert estimated_delivery_timestamp("Delivery: September 20, 2026 9:00 PM") is None
 
@@ -90,7 +94,9 @@ def test_history_keeps_all_events_oldest_first_with_carrier_timestamps():
     assert history[0]["status"] is ParcelStatus.REGISTERED
     assert history[1]["status"] is ParcelStatus.IN_TRANSIT
     assert history[-1]["status"] is ParcelStatus.DELIVERED
-    assert build_history(["bad", {}]) == [{"timestamp": None, "status": None, "raw_status": None}]
+    assert build_history(["bad", {}]) == [
+        {"timestamp": None, "status": None, "raw_status": None}
+    ]
 
 
 def test_tracking_link_encodes_the_configured_code():
@@ -165,7 +171,14 @@ def test_normalize_delivered_response_has_canonical_shape():
     assert parcel["delivered"] is True
     assert parcel["url"].endswith(DELIVERED_CODE)
     assert parcel["history"] is not None
-    for key in ("sender", "receiver", "planned_from", "planned_to", "weight", "dimensions"):
+    for key in (
+        "sender",
+        "receiver",
+        "planned_from",
+        "planned_to",
+        "weight",
+        "dimensions",
+    ):
         assert parcel[key] is None
     assert parcel["delivered_at"] == "2026-01-03T15:04:00"
     assert parcel["pickup"] is False
@@ -180,15 +193,37 @@ def test_normalize_active_response_maps_its_status_and_history_is_opt_in():
     assert parcel["history"] is None
     assert parcel["planned_from"] == "2026-09-20T15:00:00"
     assert parcel["planned_to"] == "2026-09-20T21:00:00"
-    assert CAPABILITIES == frozenset({"delivery_window", "url", "history"})
+    assert frozenset({"delivery_window", "url", "history"}) == CAPABILITIES
 
 
 def test_sort_and_delivered_filter_keep_missing_values_last():
-    assert [p["barcode"] for p in sort_parcels_by_ts(
-        [{"barcode": "b", "planned_from": None}, {"barcode": "a", "planned_from": "2026-01-01T00:00:00Z"}],
-        "planned_from",
-    )] == ["a", "b"]
-    entry = MockConfigEntry(domain=DOMAIN, options={"delivered_filter_type": "parcels", "delivered_filter_amount": 1})
-    assert len(apply_delivered_filter([{"delivered_at": "2026-01-01T00:00:00Z"}, {"delivered_at": None}], entry)) == 1
-    now_entry = MockConfigEntry(domain=DOMAIN, options={"delivered_filter_type": "days", "delivered_filter_amount": 1})
-    assert apply_delivered_filter([{"delivered_at": None}], now_entry) == [{"delivered_at": None}]
+    assert [
+        p["barcode"]
+        for p in sort_parcels_by_ts(
+            [
+                {"barcode": "b", "planned_from": None},
+                {"barcode": "a", "planned_from": "2026-01-01T00:00:00Z"},
+            ],
+            "planned_from",
+        )
+    ] == ["a", "b"]
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={"delivered_filter_type": "parcels", "delivered_filter_amount": 1},
+    )
+    assert (
+        len(
+            apply_delivered_filter(
+                [{"delivered_at": "2026-01-01T00:00:00Z"}, {"delivered_at": None}],
+                entry,
+            )
+        )
+        == 1
+    )
+    now_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={"delivered_filter_type": "days", "delivered_filter_amount": 1},
+    )
+    assert apply_delivered_filter([{"delivered_at": None}], now_entry) == [
+        {"delivered_at": None}
+    ]

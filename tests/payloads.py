@@ -3,6 +3,7 @@
 The shape follows the carrier's live responses. Identifiers, references,
 locations and timestamps are synthetic; no delivery data is kept.
 """
+
 from __future__ import annotations
 
 ACTIVE_CODE = "90000002"

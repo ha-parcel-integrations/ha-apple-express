@@ -1,4 +1,5 @@
 """Tests for Apple Express setup and unload."""
+
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.config_entries import ConfigEntryState
@@ -12,8 +13,7 @@ from custom_components.apple_express.const import (
     DOMAIN,
 )
 
-from .payloads import ACTIVE_CODE
-from .payloads import active_sample as _sample
+from .payloads import ACTIVE_CODE, active_sample as _sample
 
 OTHER_CODE = "EXAMPLE222222"
 
@@ -84,7 +84,10 @@ async def test_per_parcel_sensor_spawn_and_remove(hass):
     entry.add_to_hass(hass)
 
     mock = AsyncMock(return_value=_sample())
-    with patch("custom_components.apple_express.api.AppleExpressApiClient.async_get_parcel", new=mock):
+    with patch(
+        "custom_components.apple_express.api.AppleExpressApiClient.async_get_parcel",
+        new=mock,
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -99,8 +102,15 @@ async def test_per_parcel_sensor_spawn_and_remove(hass):
         await entry.runtime_data.coordinator.async_request_refresh()
         await hass.async_block_till_done()
 
-        assert registry.async_get_entity_id("sensor", DOMAIN, f"{entry.entry_id}_{ACTIVE_CODE}")
-        assert registry.async_get_entity_id("sensor", DOMAIN, f"{entry.entry_id}_{OTHER_CODE}") is None
+        assert registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{entry.entry_id}_{ACTIVE_CODE}"
+        )
+        assert (
+            registry.async_get_entity_id(
+                "sensor", DOMAIN, f"{entry.entry_id}_{OTHER_CODE}"
+            )
+            is None
+        )
 
 
 async def test_options_update_applies_live_without_reload(hass):
@@ -113,7 +123,10 @@ async def test_options_update_applies_live_without_reload(hass):
     entry.add_to_hass(hass)
 
     mock = AsyncMock(return_value=_sample())
-    with patch("custom_components.apple_express.api.AppleExpressApiClient.async_get_parcel", new=mock):
+    with patch(
+        "custom_components.apple_express.api.AppleExpressApiClient.async_get_parcel",
+        new=mock,
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
