@@ -115,6 +115,7 @@ Standard HA removal applies: **Settings → Devices & Services → Apple Express
 | `sensor.apple_express_parcel_<code>` | One per tracked parcel; state is the canonical status, attributes carry the full normalised parcel |
 | `sensor.apple_express_next_delivery` | Earliest expected delivery moment across all active parcels |
 | `sensor.apple_express_delivered_parcels` | Recently delivered parcels (see the retention option) |
+| `calendar.apple_express_deliveries` | Read-only calendar of expected deliveries, no extra API calls |
 | `sensor.apple_express_last_successful_update` | Diagnostic: when Apple Express was last polled successfully |
 
 A delivered parcel moves from its per-parcel sensor to the delivered sensor automatically.
@@ -176,7 +177,7 @@ logger:
 ## Troubleshooting
 
 - **A parcel shows `unknown`** — Apple Express returned a status not yet mapped by this pre-1.0 integration. The carrier's text remains visible as `raw_status`.
-- **A status logs "Unrecognised Apple Express status"** — please [open an issue](https://github.com/ha-parcel-integrations/ha-apple-express/issues/new) with the logged line so the mapping can be extended.
+- **A status logs "Unrecognised Apple Express status"** — please [open an issue](https://github.com/ha-parcel-integrations/ha-apple-express/issues/new?template=unrecognised_status.yml) with the logged line so the mapping can be extended.
 
 ## Related integrations
 
