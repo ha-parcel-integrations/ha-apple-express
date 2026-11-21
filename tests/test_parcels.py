@@ -1,5 +1,8 @@
 """Tests for the Apple Express response mapping."""
 
+from datetime import datetime
+
+from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.apple_express.const import (
@@ -67,17 +70,19 @@ def test_helpers_handle_timestamp_and_dimensions_edges():
 
 
 def test_estimated_delivery_text_parses_only_recognised_timestamps():
+    zone = dt_util.get_default_time_zone()
     assert (
         estimated_delivery_timestamp("Estimated Delivery: September 20, 2026 9:00 PM")
-        == "2026-09-20T21:00:00"
+        == datetime(2026, 9, 20, 21, tzinfo=zone).isoformat()
     )
     assert estimated_delivery_timestamp("Estimated Delivery: To Be Determined") is None
     assert estimated_delivery_timestamp("Delivery: September 20, 2026 9:00 PM") is None
 
 
 def test_delivered_text_parses_only_recognised_timestamps():
+    zone = dt_util.get_default_time_zone()
     assert delivered_timestamp("Delivered September 19, 2026 11:58 AM") == (
-        "2026-09-19T11:58:00"
+        datetime(2026, 9, 19, 11, 58, tzinfo=zone).isoformat()
     )
     assert delivered_timestamp("Delivered To Be Determined") is None
 
@@ -180,7 +185,10 @@ def test_normalize_delivered_response_has_canonical_shape():
         "dimensions",
     ):
         assert parcel[key] is None
-    assert parcel["delivered_at"] == "2026-01-03T15:04:00"
+    zone = dt_util.get_default_time_zone()
+    assert (
+        parcel["delivered_at"] == datetime(2026, 1, 3, 15, 4, tzinfo=zone).isoformat()
+    )
     assert parcel["pickup"] is False
     assert parcel["pickup_point"] is None
 
@@ -191,8 +199,9 @@ def test_normalize_active_response_maps_its_status_and_history_is_opt_in():
     assert parcel["status"] is ParcelStatus.IN_TRANSIT
     assert parcel["delivered"] is False
     assert parcel["history"] is None
-    assert parcel["planned_from"] == "2026-09-20T15:00:00"
-    assert parcel["planned_to"] == "2026-09-20T21:00:00"
+    zone = dt_util.get_default_time_zone()
+    assert parcel["planned_from"] == datetime(2099, 9, 20, 15, tzinfo=zone).isoformat()
+    assert parcel["planned_to"] == datetime(2099, 9, 20, 21, tzinfo=zone).isoformat()
     assert frozenset({"delivery_window", "url", "history"}) == CAPABILITIES
 
 

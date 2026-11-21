@@ -4,10 +4,12 @@ The parcel mapping itself is covered by ``test_parcels.py``.
 """
 
 import asyncio
+from datetime import datetime
 from unittest.mock import AsyncMock
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.util import dt as dt_util
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -25,6 +27,11 @@ from custom_components.apple_express.coordinator import AppleExpressCoordinator
 from .payloads import ACTIVE_CODE, DELIVERED_CODE, active_sample, delivered_sample
 
 OTHER_CODE = "EXAMPLE888888"
+
+
+def _local(year: int, month: int, day: int, hour: int) -> str:
+    zone = dt_util.get_default_time_zone()
+    return datetime(year, month, day, hour, tzinfo=zone).isoformat()
 
 
 def _entry_with(parcels: list[dict]) -> MockConfigEntry:
@@ -423,17 +430,17 @@ async def test_changed_parseable_eta_text_fires_delivery_time_event(hass):
 
     moved = active_sample()
     moved["orderDetails"]["statusChangeText"] = (
-        "Estimated Delivery: September 21, 2026 9:00 PM"
+        "Estimated Delivery: September 21, 2099 9:00 PM"
     )
     client.async_get_parcel.return_value = moved
     await coordinator._async_update_data()
     await hass.async_block_till_done()
 
     assert len(events) == 1
-    assert events[0].data["old_planned_from"] == "2026-09-20T15:00:00"
-    assert events[0].data["new_planned_from"] == "2026-09-21T15:00:00"
-    assert events[0].data["old_planned_to"] == "2026-09-20T21:00:00"
-    assert events[0].data["new_planned_to"] == "2026-09-21T21:00:00"
+    assert events[0].data["old_planned_from"] == _local(2099, 9, 20, 15)
+    assert events[0].data["new_planned_from"] == _local(2099, 9, 21, 15)
+    assert events[0].data["old_planned_to"] == _local(2099, 9, 20, 21)
+    assert events[0].data["new_planned_to"] == _local(2099, 9, 21, 21)
 
 
 async def test_unparseable_eta_text_does_not_fire_delivery_time_event(hass):

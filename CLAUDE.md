@@ -35,12 +35,14 @@ you act in one of these areas:
   summary+diagnostic sensors. Add a new non-parcel sensor's unique_id to the set.
 - **Per-parcel sensors are removed by the summary sensor** via
   `entity_registry.async_remove` (self-removal races and leaves ghosts).
-- **If this carrier can reach `ParcelStatus.AT_PICKUP_POINT` from a real raw
-  status/code**, it needs an `awaiting_pickup` sensor — see *Parcel contract*
-  in `CONVENTIONS.md`. Say "pickup point", not "ServicePoint"/"parcel
-  shop"/"locker", for the generic concept. `ha-dhl-nl`, `ha-dpd`, `ha-gls`,
-  `ha-inpost` are reference implementations; `apple_express` here does not
-  demonstrate it yet.
+- **The pickup-point summaries are a pair.** A carrier that can deliver to a
+  pickup point or locker exposes both `en_route_to_pickup_point` and
+  `awaiting_pickup`, even before a real parcel has shown the status or flag
+  (they read 0 until then; record it in `PENDING_*`). A carrier without pickup
+  points exposes neither and keeps `pickup` constantly False.
+  See *Parcel contract* in `CONVENTIONS.md`. Say "pickup point", not
+  "ServicePoint"/"parcel shop"/"locker", for the generic concept; the
+  example carrier demonstrates both canonical sensors.
 
 ## Carrier-specific notes
 
@@ -75,11 +77,23 @@ to no effect, and they are absent from the 429 itself.
 The timestamps carry no consistent offset (`generatedAtTimeZone` is usually
 empty), and the API exposes no structured ETA field. When `statusChangeText`
 matches `Estimated Delivery: <English date and time>`, the integration extracts
-that value as the end of a six-hour window and uses naive local ISO timestamps;
-values such as `To Be Determined` remain empty. `Delivered <English date and
-time>` similarly fills `delivered_at`. The optional timeline retains the
-carrier's own `generatedAt` values and raw event names. Diagnostics redact the
-code, reference, location and delivery fields.
+that value as the end of a six-hour window (`planned_from` is six hours
+earlier); values such as `To Be Determined` remain empty. `Delivered <English
+date and time>` similarly fills `delivered_at`. The carrier serves several
+zones and sends no offset, so both are read in Home Assistant's time zone and
+published with its offset. `planned_*` is built with `planned_window` and
+emptied by `planned_for_status`. The optional timeline retains the carrier's
+own `generatedAt` values (no offset) and raw event names. Diagnostics redact
+the code, reference, location and delivery fields.
+
+**No pickup points.** The carrier has no pickup-point delivery, so `pickup` is
+a constant `False`, `pickup_point` is always `None`, and there are no
+`awaiting_pickup` or `en_route_to_pickup_point` sensors.
+
+**Documented divergence.** The contract treats a single estimate as a moment
+that runs to the end of its day; here the estimate is published as a six-hour
+window ending at it, because the shipped behaviour treats the estimate as the end of a
+six-hour window and nothing confirms or refutes that against a real parcel.
 
 ## Options and reloads
 
