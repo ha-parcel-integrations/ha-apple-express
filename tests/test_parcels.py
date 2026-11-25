@@ -120,6 +120,7 @@ CANONICAL_KEYS = [
     "barcode",
     "sender",
     "receiver",
+    "contents",
     "status",
     "raw_status",
     "delivered",
@@ -179,6 +180,7 @@ def test_normalize_delivered_response_has_canonical_shape():
     for key in (
         "sender",
         "receiver",
+        "contents",
         "planned_from",
         "planned_to",
         "weight",

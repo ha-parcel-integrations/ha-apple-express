@@ -95,6 +95,13 @@ def test_next_delivery_skips_a_window_that_has_ended():
     assert sensor.extra_state_attributes["barcode"] == "LATER"
 
 
+def test_next_delivery_carries_the_contents():
+    parcel = _parcel("A", planned_from="2099-05-01T10:00:00Z")
+    parcel["contents"] = "Running shoes"
+    sensor = AppleExpressNextDeliverySensor(_coordinator([parcel]), _entry())
+    assert sensor.extra_state_attributes["contents"] == "Running shoes"
+
+
 def test_next_delivery_none_without_moments():
     sensor = AppleExpressNextDeliverySensor(_coordinator([_parcel("A")]), _entry())
     assert sensor.native_value is None
